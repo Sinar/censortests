@@ -1,6 +1,7 @@
 # Credits to https://forum.lowyat.net/index.php?showtopic=2794929&view=findpost&p=60057869
 import time,argparse
-from socket import socket, IPPROTO_TCP, TCP_NODELAY, timeout, getaddrinfo
+from socket import socket, IPPROTO_TCP, TCP_NODELAY, timeout, getaddrinfo, gethostbyname, \
+    getprotobyname, AF_INET, SOL_IP, SOCK_RAW, SOCK_DGRAM, IP_TTL, gethostbyaddr, error
 
 class target:
     pass
@@ -58,22 +59,67 @@ def testall(host):
     if len(ips) > 0:
         for i in ips:
             testsingle(i[4][0])
-        
-    
+
+"""
+credit: https://blogs.oracle.com/ksplice/entry/learning_by_doing_writing_your
+"""            
+def traceroute(host):
+    print "## Try to trace route to target"
+    dest_addr = gethostbyname(host)
+    port = 33434
+    max_hops = 30
+    icmp = getprotobyname('icmp')
+    udp = getprotobyname('udp')
+    ttl = 1
+    while True:
+        recv_socket = socket(AF_INET, SOCK_RAW, icmp)
+        send_socket = socket(AF_INET, SOCK_DGRAM, udp)
+        send_socket.setsockopt(SOL_IP, IP_TTL, ttl)
+        recv_socket.bind(("", port))
+        send_socket.sendto("", (host, port))
+        curr_addr = None
+        curr_name = None
+        try:
+            _, curr_addr = recv_socket.recvfrom(512)
+            curr_addr = curr_addr[0]
+            try:
+                curr_name = gethostbyaddr(curr_addr)[0]
+            except error:
+                curr_name = curr_addr
+        except error:
+            pass
+        finally:
+            send_socket.close()
+            recv_socket.close()
+
+        if curr_addr is not None:
+            curr_host = "%s (%s)" % (curr_name, curr_addr)
+        else:
+            curr_host = "*"
+        print "%d\t%s" % (ttl, curr_host)
+
+        ttl += 1
+        if curr_addr == dest_addr or ttl > max_hops:
+            break            
+           
 def main():
     parser = argparse.ArgumentParser(
         prog="testfilter.py",
         description="Scripts to test for presence of censorship and packet filters")
     parser.add_argument('--host', help='Target Hostname', required=True, metavar='hostname')
-    parser.add_argument('--tryall', help='Try all IPs returned by DNS lookup', metavar='', 
-        default=1)
+    parser.add_argument('--tryall', help='Try all IPs returned by DNS lookup', metavar='1')
+    parser.add_argument('--traceroute', help='Try to trace route to target host, require root access', 
+        metavar='1')
     arguments = parser.parse_args(namespace=target)
-    
+ 
     if target.tryall is None:
         testsingle(target.host) 
+        if target.traceroute is not None:
+            traceroute(target.host)
     else:
         testall(target.host)
-        
+        if target.traceroute is not None:
+            traceroute(target.host)
         
 if __name__ == "__main__":
     main()
