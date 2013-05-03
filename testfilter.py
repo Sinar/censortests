@@ -13,45 +13,50 @@ from socket import socket, IPPROTO_TCP, TCP_NODELAY, timeout, gethostbyname, \
 class target:
     pass
 
-class test:
-    def test1(self, host, path="/", verbose=False):
+class test(object):
+    def __init__(self, host, path="/", verbose=False):
+        self.host    = host
+        self.path    = path
+        self.verbose = verbose
+
+    def test1(self):
         print "## Test 1: Check DNS, and IP block: Testing Same IP, different Virtual Host"
         s = socket()
         s.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
-        s.connect((host, 80))
-        path_str = "GET %s HTTP/1.1\r\n\r\n" % path
+        s.connect((self.host, 80))
+        path_str = "GET %s HTTP/1.1\r\n\r\n" % self.path
         s.send(path_str)
         try: 
-            self.process_responses(s.recv(4096), verbose=verbose)
+            self.process_responses(s.recv(4096), verbose=self.verbose)
         except timeout:
             print "Timeout -- waited 5 seconds\n"   
             
-    def test2(self, host, path="/", verbose=False):
+    def test2(self):
         print "## Test 2: Emulating a real web browser: Testing Same IP, actual Virtual Host, single packet"
         s = socket()
         s.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
-        s.connect((host, 80))
-        path_str = "GET %s HTTP/1.1\r\nHost: %s\r\n\r\n" % (path, host)
+        s.connect((self.host, 80))
+        path_str = "GET %s HTTP/1.1\r\nHost: %s\r\n\r\n" % (self.path, self.host)
         s.send(path_str)
         s.settimeout(5) # five seconds ought to be enough
         try:
-            self.process_responses(s.recv(4096), verbose=verbose)
+            self.process_responses(s.recv(4096), verbose=self.verbose)
         except timeout:
             print "Timeout -- waited 5 seconds\n"    
             
-    def test3(self, host, path="/", verbose=False):
+    def test3(self):
         print "## Test 3: Attempting to fragment: Testing Same IP, actual Virtual Host, fragmented packet"
         s = socket()
         s.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
-        s.connect((host, 80))
-        path_str = "GET %s HTTP/1.1\r\n" % path
+        s.connect((self.host, 80))
+        path_str = "GET %s HTTP/1.1\r\n" % self.path
         s.send(path_str)
         time.sleep(0.2) # Sleep for a bit to ensure that the next packets goes through separately.
-        s.send("Host: "+host[0:2])
+        s.send("Host: "+self.host[0:2])
         time.sleep(0.2)
-        s.send(host[2:]+"\r\n\r\n")
+        s.send(self.host[2:]+"\r\n\r\n")
         try:
-            self.process_responses(s.recv(4096), verbose=verbose)
+            self.process_responses(s.recv(4096), verbose=self.verbose)
         except timeout:
             print "Timeout -- waited 5 seconds\n"  
 
@@ -77,16 +82,16 @@ def getips(host):
     return result
     
 def testsingle(host, path="/", verbose=False):
-    run = test()
-    run.test1(host, path="/", verbose=verbose) 
-    run.test2(host, path="/", verbose=verbose) 
-    run.test3(host, path="/", verbose=verbose)
+    run = test(host, path, verbose)
+    run.test1() 
+    run.test2() 
+    run.test3()
     
 def testall(host, path="/", verbose=False):
     ips = getips(host)                                                  
     if len(ips) > 0:
         for i in ips:
-            testsingle(i, path="/", verbose=verbose)
+            testsingle(i, path=path, verbose=verbose)
 
 """
 credit: https://blogs.oracle.com/ksplice/entry/learning_by_doing_writing_your
