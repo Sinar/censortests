@@ -10,16 +10,18 @@ import time,argparse,os,re
 from socket import socket, IPPROTO_TCP, TCP_NODELAY, timeout, gethostbyname, \
     getprotobyname, AF_INET, SOL_IP, SOCK_RAW, SOCK_DGRAM, IP_TTL, gethostbyaddr, error
 
+
 class target:
     pass
 
-class test(object):
+
+class Test(object):
     def __init__(self, host, path="/", verbose=False):
         self.host    = host
         self.path    = path
         self.verbose = verbose
 
-    def test1(self):
+    def test_dns_ip_block(self):
         print "## Test 1: Check DNS, and IP block: Testing Same IP, different Virtual Host"
         s = socket()
         s.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
@@ -31,7 +33,7 @@ class test(object):
         except timeout:
             print "Timeout -- waited 5 seconds\n"   
             
-    def test2(self):
+    def test_browser_emulation(self):
         print "## Test 2: Emulating a real web browser: Testing Same IP, actual Virtual Host, single packet"
         s = socket()
         s.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
@@ -44,7 +46,7 @@ class test(object):
         except timeout:
             print "Timeout -- waited 5 seconds\n"    
             
-    def test3(self):
+    def test_fragment(self):
         print "## Test 3: Attempting to fragment: Testing Same IP, actual Virtual Host, fragmented packet"
         s = socket()
         s.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
@@ -82,10 +84,10 @@ def getips(host):
     return result
     
 def testsingle(host, path="/", verbose=False):
-    run = test(host, path, verbose)
-    run.test1() 
-    run.test2() 
-    run.test3()
+    run = Test(host, path, verbose)
+    run.test_dns_ip_block() 
+    run.test_browser_emulation() 
+    run.test_fragment()
     
 def testall(host, path="/", verbose=False):
     ips = getips(host)                                                  
@@ -144,14 +146,15 @@ def main():
     parser.add_argument('--traceroute', help='Try to trace route to target host, require root access', 
         metavar='1')
     parser.add_argument('--path', help='Set the path used to query', metavar='/')
+    parser.add_argument('--verbose', help='Set verbose', metavar=False)
     arguments = parser.parse_args(namespace=target)
  
     if target.tryall is None:
-        testsingle(target.host, target.path) 
+        testsingle(target.host, target.path, verbose=target.verbose) 
         if target.traceroute is not None:
-            traceroute(target.host, target.path)
+            traceroute(target.host)
     else:
-        testall(target.host, target.path)
+        testall(target.host, target.path, verbose=target.verbose)
         if target.traceroute is not None:
             traceroute(target.host)
         
