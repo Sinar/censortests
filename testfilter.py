@@ -15,13 +15,13 @@ class target:
     pass
 
 
-class Test(object):
+class FilterCheck(object):
     def __init__(self, host, path="/", verbose=False):
         self.host    = host
         self.path    = path
         self.verbose = verbose
 
-    def test_dns_ip_block(self):
+    def check_dns_ip_block(self):
         print "## Test 1: Check DNS, and IP block: Testing Same IP, different Virtual Host"
         s = socket()
         s.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
@@ -33,7 +33,7 @@ class Test(object):
         except timeout:
             print "Timeout -- waited 5 seconds\n"   
             
-    def test_browser_emulation(self):
+    def check_browser_emulation(self):
         print "## Test 2: Emulating a real web browser: Testing Same IP, actual Virtual Host, single packet"
         s = socket()
         s.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
@@ -46,7 +46,7 @@ class Test(object):
         except timeout:
             print "Timeout -- waited 5 seconds\n"    
             
-    def test_fragment(self):
+    def check_fragment(self):
         print "## Test 3: Attempting to fragment: Testing Same IP, actual Virtual Host, fragmented packet"
         s = socket()
         s.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
@@ -70,7 +70,7 @@ class Test(object):
         else:
             print "warning"
         if verbose:
-            print received 
+            print raw 
 
 
 def getips(host):
@@ -84,10 +84,10 @@ def getips(host):
     return result
     
 def testsingle(host, path="/", verbose=False):
-    run = Test(host, path, verbose)
-    run.test_dns_ip_block() 
-    run.test_browser_emulation() 
-    run.test_fragment()
+    run = FilterCheck(host, path, verbose)
+    run.check_dns_ip_block() 
+    run.check_browser_emulation() 
+    run.check_fragment()
     
 def testall(host, path="/", verbose=False):
     ips = getips(host)                                                  
