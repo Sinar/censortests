@@ -1,4 +1,11 @@
-# Credits to https://forum.lowyat.net/index.php?showtopic=2794929&view=findpost&p=60057869
+"""
+censortests/testfilter.py 
+http://sinarproject.org/
+"""
+
+"""
+Credits to https://forum.lowyat.net/index.php?showtopic=2794929&view=findpost&p=60057869
+"""
 import time,argparse
 from socket import socket, IPPROTO_TCP, TCP_NODELAY, timeout, getaddrinfo, gethostbyname, \
     getprotobyname, AF_INET, SOL_IP, SOCK_RAW, SOCK_DGRAM, IP_TTL, gethostbyaddr, error
