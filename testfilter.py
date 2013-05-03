@@ -76,17 +76,17 @@ def getips(host):
             result.append(current)
     return result
     
-def testsingle(host, path="/"):
+def testsingle(host, path="/", verbose=False):
     run = test()
-    run.test1(host, path="/") 
-    run.test2(host, path="/") 
-    run.test3(host, path="/")
+    run.test1(host, path="/", verbose=verbose) 
+    run.test2(host, path="/", verbose=verbose) 
+    run.test3(host, path="/", verbose=verbose)
     
-def testall(host, path="/"):
+def testall(host, path="/", verbose=False):
     ips = getips(host)                                                  
     if len(ips) > 0:
         for i in ips:
-            testsingle(i, path="/")
+            testsingle(i, path="/", verbose=verbose)
 
 """
 credit: https://blogs.oracle.com/ksplice/entry/learning_by_doing_writing_your
