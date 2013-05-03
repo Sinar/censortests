@@ -14,19 +14,19 @@ class target:
     pass
 
 class test:
-    def test1(self, host, path="/"):
+    def test1(self, host, path="/", verbose=False):
         print "## Test 1: Check DNS, and IP block: Testing Same IP, different Virtual Host"
         s = socket()
         s.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
         s.connect((host, 80))
         path_str = "GET %s HTTP/1.1\r\n\r\n" % path
         s.send(path_str)
-        try:
-            print s.recv(4096)
+        try: 
+            self.process_responses(s.recv(4096), verbose=verbose)
         except timeout:
             print "Timeout -- waited 5 seconds\n"   
             
-    def test2(self, host, path="/"):
+    def test2(self, host, path="/", verbose=False):
         print "## Test 2: Emulating a real web browser: Testing Same IP, actual Virtual Host, single packet"
         s = socket()
         s.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
@@ -35,11 +35,11 @@ class test:
         s.send(path_str)
         s.settimeout(5) # five seconds ought to be enough
         try:
-            print s.recv(4096)
+            self.process_responses(s.recv(4096), verbose=verbose)
         except timeout:
             print "Timeout -- waited 5 seconds\n"    
             
-    def test3(self, host, path="/"):
+    def test3(self, host, path="/", verbose=False):
         print "## Test 3: Attempting to fragment: Testing Same IP, actual Virtual Host, fragmented packet"
         s = socket()
         s.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
@@ -51,10 +51,21 @@ class test:
         time.sleep(0.2)
         s.send(host[2:]+"\r\n\r\n")
         try:
-            print s.recv(4096)
+            self.process_responses(s.recv(4096), verbose=verbose)
         except timeout:
             print "Timeout -- waited 5 seconds\n"  
-            
+
+    def process_responses(self, raw, verbose=False):
+        responses  = raw.split('\n')
+        status = responses[0].split(" ")
+        if status[1] == "200":
+            print "OK"
+        else:
+            print "warning"
+        if verbose:
+            print received 
+
+
 def getips(host):
     ips = os.popen('nslookup '+host).readlines()
     result = []
