@@ -23,35 +23,39 @@ class target:
 
 
 class test:
-    def test1(self, host):
+    def test1(self, host, path="/"):
         print "## Test 1: Check DNS, and IP block: Testing Same IP, different Virtual Host"
         s = socket()
         s.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
         s.connect((host, 80))
-        s.send("GET / HTTP/1.1\r\n\r\n")
+        path_str = "GET %s HTTP/1.1\r\n\r\n" % path
+        s.send(path_str)
         try:
             print s.recv(4096)
         except timeout:
             print "Timeout -- waited 5 seconds\n"
 
-    def test2(self, host):
+    def test2(self, host, path="/"):
         print "## Test 2: Emulating a real web browser: Testing Same IP, actual Virtual Host, single packet"
         s = socket()
         s.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
         s.connect((host, 80))
-        s.send("GET / HTTP/1.1\r\nHost: " + host + "\r\n\r\n")
-        s.settimeout(5)  # five seconds ought to be enough
+        path_str = "GET %s HTTP/1.1\r\nHost: %s\r\n\r\n" % (path, host)
+        s.send(path_str)
+        # five seconds ought to be enough
+        s.settimeout(5)
         try:
             print s.recv(4096)
         except timeout:
             print "Timeout -- waited 5 seconds\n"
 
-    def test3(self, host):
+    def test3(self, host, path="/"):
         print "## Test 3: Attempting to fragment: Testing Same IP, actual Virtual Host, fragmented packet"
         s = socket()
         s.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
         s.connect((host, 80))
-        s.send("GET / HTTP/1.1\r\n")
+        path_str = "GET %s HTTP/1.1\r\n" % path
+        s.send(path_str)
         # Sleep for a bit to ensure that the next packets goes through separately.
         # Not sure if we actually need it. Reducing it from 0.2 to 0.1 seconds
         time.sleep(0.1)
@@ -78,19 +82,18 @@ def getips(host, port=80):
     return result
 
 
-def testsingle(host):
+def testsingle(host, path="/"):
     run = test()
-    run.test1(host)
-    run.test2(host)
-    run.test3(host)
+    run.test1(host, path="/")
+    run.test2(host, path="/")
+    run.test3(host, path="/")
 
 
-def testall(host):
+def testall(host, path="/"):
     ips = getips(host)
     if len(ips) > 0:
         for i in ips:
-            print "Testing %s\n" % i
-            testsingle(i)
+            testsingle(i, path="/")
 
 
 def traceroute(host):
@@ -145,14 +148,15 @@ def main():
     parser.add_argument('--tryall', help='Try all IPs returned by DNS lookup', metavar='1')
     parser.add_argument('--traceroute', help='Try to trace route to target host, require root access',
         metavar='1')
-    arguments = parser.parse_args(namespace=target)
+    parser.add_argument('--path', help='Set the path used to query', metavar='/')
+    parser.parse_args(namespace=target)
 
-    if arguments.tryall is None:
-        testsingle(target.host)
+    if target.tryall is None:
+        testsingle(target.host, target.path)
         if target.traceroute is not None:
-            traceroute(target.host)
+            traceroute(target.host, target.path)
     else:
-        testall(target.host)
+        testall(target.host, target.path)
         if target.traceroute is not None:
             traceroute(target.host)
 
