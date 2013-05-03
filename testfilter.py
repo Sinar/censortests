@@ -26,24 +26,26 @@ class test:
         except timeout:
             print "Timeout -- waited 5 seconds\n"   
             
-    def test2(self, host):
+    def test2(self, host, path="/"):
         print "## Test 2: Emulating a real web browser: Testing Same IP, actual Virtual Host, single packet"
         s = socket()
         s.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
         s.connect((host, 80))
-        s.send("GET / HTTP/1.1\r\nHost: "+host+"\r\n\r\n")
+        path_str = "GET %s HTTP/1.1\r\nHost: %s\r\n\r\n" % (path, host)
+        s.send(path_str)
         s.settimeout(5) # five seconds ought to be enough
         try:
             print s.recv(4096)
         except timeout:
             print "Timeout -- waited 5 seconds\n"    
             
-    def test3(self, host):
+    def test3(self, host, path="/"):
         print "## Test 3: Attempting to fragment: Testing Same IP, actual Virtual Host, fragmented packet"
         s = socket()
         s.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
         s.connect((host, 80))
-        s.send("GET / HTTP/1.1\r\n")
+        path_str = "GET %s HTTP/1.1\r\n" % path
+        s.send(path_str)
         time.sleep(0.2) # Sleep for a bit to ensure that the next packets goes through separately.
         s.send("Host: "+host[0:2])
         time.sleep(0.2)
@@ -63,17 +65,17 @@ def getips(host):
             result.append(current)
     return result
     
-def testsingle(host):
+def testsingle(host, path="/"):
     run = test()
-    run.test1(host) 
-    run.test2(host) 
-    run.test3(host)
+    run.test1(host, path="/") 
+    run.test2(host, path="/") 
+    run.test3(host, path="/")
     
-def testall(host):
+def testall(host, path="/"):
     ips = getips(host)                                                  
     if len(ips) > 0:
         for i in ips:
-            testsingle(i)
+            testsingle(i, path="/")
 
 """
 credit: https://blogs.oracle.com/ksplice/entry/learning_by_doing_writing_your
@@ -129,11 +131,11 @@ def main():
     arguments = parser.parse_args(namespace=target)
  
     if target.tryall is None:
-        testsingle(target.host) 
+        testsingle(target.host, target.path) 
         if target.traceroute is not None:
-            traceroute(target.host)
+            traceroute(target.host, target.path)
     else:
-        testall(target.host)
+        testall(target.host, target.path)
         if target.traceroute is not None:
             traceroute(target.host)
         
