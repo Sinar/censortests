@@ -14,12 +14,13 @@ class target:
     pass
 
 class test:
-    def test1(self, host):
+    def test1(self, host, path="/"):
         print "## Test 1: Check DNS, and IP block: Testing Same IP, different Virtual Host"
         s = socket()
         s.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
         s.connect((host, 80))
-        s.send("GET / HTTP/1.1\r\n\r\n")
+        path_str = "GET %s HTTP/1.1\r\n\r\n" % path
+        s.send(path_str)
         try:
             print s.recv(4096)
         except timeout:
@@ -124,6 +125,7 @@ def main():
     parser.add_argument('--tryall', help='Try all IPs returned by DNS lookup', metavar='1')
     parser.add_argument('--traceroute', help='Try to trace route to target host, require root access', 
         metavar='1')
+    parser.add_argument('--path', help='Set the path used to query', metavar='/')
     arguments = parser.parse_args(namespace=target)
  
     if target.tryall is None:
