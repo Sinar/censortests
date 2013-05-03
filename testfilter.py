@@ -6,8 +6,8 @@ http://sinarproject.org/
 """
 Credits to https://forum.lowyat.net/index.php?showtopic=2794929&view=findpost&p=60057869
 """
-import time,argparse
-from socket import socket, IPPROTO_TCP, TCP_NODELAY, timeout, getaddrinfo, gethostbyname, \
+import time,argparse,os,re
+from socket import socket, IPPROTO_TCP, TCP_NODELAY, timeout, gethostbyname, \
     getprotobyname, AF_INET, SOL_IP, SOCK_RAW, SOCK_DGRAM, IP_TTL, gethostbyaddr, error
 
 class target:
@@ -53,7 +53,14 @@ class test:
             print "Timeout -- waited 5 seconds\n"  
             
 def getips(host):
-    return getaddrinfo(host, 80)  
+    ips = os.popen('nslookup '+host).readlines()
+    result = []
+    for i in ips:
+        if re.match('Address: ', i):
+            current = re.sub('Address: ', '', i)
+            current = re.sub('\n', '', current)
+            result.append(current)
+    return result
     
 def testsingle(host):
     run = test()
@@ -65,7 +72,7 @@ def testall(host):
     ips = getips(host)                                                  
     if len(ips) > 0:
         for i in ips:
-            testsingle(i[4][0])
+            testsingle(i)
 
 """
 credit: https://blogs.oracle.com/ksplice/entry/learning_by_doing_writing_your
