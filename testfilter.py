@@ -84,16 +84,16 @@ def getips(host, port=80):
 
 def testsingle(host, path="/"):
     run = test()
-    run.test1(host, path="/")
-    run.test2(host, path="/")
-    run.test3(host, path="/")
+    run.test1(host, path)
+    run.test2(host, path)
+    run.test3(host, path)
 
 
 def testall(host, path="/"):
     ips = getips(host)
     if len(ips) > 0:
         for i in ips:
-            testsingle(i, path="/")
+            testsingle(i, path)
 
 
 def traceroute(host):
